@@ -10,11 +10,11 @@ if __name__ == '__main__':
     num1 = 100101
     num2 = 100100
 
-    print(f'{num1} + {num2} = {summa(list(str(num1)), list(str(num2)))}')
+    # print(f'{num1} + {num2} = {summa(list(str(num1)), list(str(num2)))}')
 
-    print(f'{num1} - {num2} = {subtract_as_ints(num1, num2)}')
-    print(f'{num1} * {num2} = {muliply(num1, num2)}')
-    print(f'{num1} / {num2} = {division(num1, num2)}')
+    # print(f'{num1} - {num2} = {subtract_as_ints(num1, num2)}')
+    # print(f'{num1} * {num2} = {muliply(num1, num2)}')
+    # print(f'{num1} / {num2} = {division(num1, num2)}')
 
     """
     Трудности:
