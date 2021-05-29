@@ -4,15 +4,15 @@ SIGN = 0  # индекс знакового разряда
 
 
 def invert_sign(number: List[str]):
-    number = number[:]
-    if number[0] == '0':
-        number[0] = '1'
-
-    return convert_to_additoinal_code(number)
+    return convert_to_additoinal_code(number[:], force=True)
 
 
 def convert_to_additoinal_code(number: List[str], bits: int = 8, force=False) -> \
         List[str]:
+    """ Преобразование числа из прямого в дополнителньый код.
+
+    force - флаг принудельного преобзоавания для положительных чисел
+    """
     ones_complement = number[:]
 
     # Дополнительный код положительного числа совпадает с прямым кодом.
@@ -34,18 +34,19 @@ def convert_to_additoinal_code(number: List[str], bits: int = 8, force=False) ->
             raise ValueError("Число должно быть в двоичной системе счисления")
 
     tmp_bits = len(ones_complement)
-    additional_code = summa(ones_complement, ['0'] * (tmp_bits-1) + ['1'], tmp_bits)
+    additional_code = summa(ones_complement, ['0'] * (tmp_bits - 1) + ['1'],
+                            tmp_bits)
 
     if len(additional_code) != bits:
         raise Exception("")
 
-    # https://neerc.ifmo.ru/wiki/index.php?title=%D0%A0%D0%B5%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F_%D0%B2%D1%8B%D1%87%D0%B8%D1%82%D0%B0%D0%BD%D0%B8%D1%8F_%D1%81%D1%83%D0%BC%D0%BC%D0%B0%D1%82%D0%BE%D1%80%D0%BE%D0%BC
     return additional_code
 
 
 def summa(num1: List[str], num2: List[str], bits=8) -> List[str]:
-    num1 = ''.join(num1)
-    num2 = ''.join(num2)
+    """ Сложение чисел в двочиной системе счисления. """
+    # num1 = ''.join(num1)
+    # num2 = ''.join(num2)
 
     if len(num1) > bits or len(num2) > bits:
         raise Exception(f"{num1} {num2}")
@@ -53,51 +54,45 @@ def summa(num1: List[str], num2: List[str], bits=8) -> List[str]:
     # уравнять числа по длине
     if len(num1) < bits:
         len_diff = bits - len(num1)
-        num1 = '0' * len_diff + num1
+        num1 = (['0'] * len_diff) + num1
 
     if len(num2) < bits:
         len_diff = bits - len(num2)
-        num2 = '0' * len_diff + num2
+        num2 = (['0'] * len_diff) + num2
 
-    additional = False
+    additional = False  # флаг переноса разряда
     result = ''
-    for i in range(1, len(num1) + 1):
-        val1 = num1[-i]
-        val2 = num2[-i]
+    for rank in range(1, bits + 1):
+        bit1 = num1[-rank]
+        bit2 = num2[-rank]
 
-        if val1 == '0' and val2 == '0':
+        if bit1 == '0' and bit2 == '0':
             if additional:
                 result = '1' + result
                 additional = False
             elif not additional:
                 result = '0' + result
-        elif val1 == '0' and val2 == '1':
+        elif (bit1 == '0' and bit2 == '1') or (bit1 == '1' and bit2 == '0'):
             if additional:
                 result = '0' + result
                 additional = True
             elif not additional:
                 result = '1' + result
-        elif val1 == '1' and val2 == '0':
-            if additional:
-                result = '0' + result
-                additional = True
-            elif not additional:
-                result = '1' + result
-        elif val1 == '1' and val2 == '1':
+        elif bit1 == '1' and bit2 == '1':
             if additional:
                 result = '1' + result
-                additional = True
             elif not additional:
                 result = '0' + result
-                additional = True
-
-    # if additional:
-    #     result = '1' + result
+            additional = True
 
     return list(result)
 
 
 def subtract_as_ints(minuend: int, subtrahend: int) -> int:
+    """ Вычитание.
+
+    Вычитание столбиком
+    """
     num1_str = str(minuend)
     num2_str = str(subtrahend)
     assert len(num1_str) >= len(num2_str), \
@@ -127,13 +122,11 @@ def subtract_as_ints(minuend: int, subtrahend: int) -> int:
 
 
 def subtract_using_additional_code(minuend: List[str], subtrahend: List[str],
-                                   bits=8, force=False) -> List[str]:
-    """
-    Вычитание двочиных чисел в дополнительном коде
-    minuend: str уменьшаемое - двоичное число в виде строки
-    subtrahend: str вычитаемое - двоичное число в виде строки
+                                   bits=8) -> List[str]:
+    """ Вычитание двочиных чисел c применением дополнительного кода.
 
-    force: принудителньое преобразование в доп. код
+    minuend: str уменьшаемое - двоичное число в виде списка из '0' и '1'
+    subtrahend: str вычитаемое - двоичное число в виде списка из '0' и '1'
     """
     minuend = ''.join(minuend)
     subtrahend = ''.join(subtrahend)
@@ -144,55 +137,63 @@ def subtract_using_additional_code(minuend: List[str], subtrahend: List[str],
         subtrahend = ('0' * (bits - len(subtrahend))) + subtrahend
 
     minuend_additional_code = list(minuend)
-    subtrahend_additional_code = list(subtrahend)
-    subtrahend_additional_code = convert_to_additoinal_code(
-        subtrahend_additional_code, force)
+    subtrahend_additional_code = convert_to_additoinal_code(list(subtrahend),
+                                                            False)
 
     difference = summa(minuend_additional_code, subtrahend_additional_code)
-    if len(difference) > 8:
+
+    if len(difference) > bits:
         return difference[1:]
 
     return difference
 
 
-def muliply(multiplicanda, multiplier) -> int:
-    if isinstance(multiplicanda, list):
-        num1_str = ''.join(multiplicanda)
-        num2_str = ''.join(multiplier)
+def muliply(multiplicanda: List[str],
+            multiplier: List[str], bits=8) -> List[str]:
+    """ Уножение целых двоичных чисел со знаком. Машинный метод. """
+    multiplicanda = multiplicanda[:]
+    multiplier = multiplier[:]
 
-    # TODO: Работа с массивом строк длины 1
-    elif isinstance(multiplicanda, int):
-        num1_str = str(multiplicanda)
-        num2_str = str(multiplier)
-    else:
-        raise ValueError()
+    assert (len(multiplicanda) <= bits and len(multiplier) <= bits,
+            f'Длина числа не должна превышать {bits} разрядов')
 
-    assert (len(num1_str) <= 8 and len(num2_str) <= 8,
-            'Длина числа не должна превышать 8 разрядов')
-    for i in num1_str:
+    for i in multiplicanda:
         assert (i == '0' or i == '1', 'Числа должны состоять только из 0 и 1')
-    for i in num2_str:
+    for i in multiplier:
         assert (i == '0' or i == '1', 'Числа должны состоять только из 0 и 1')
 
-    if len(num2_str) < 8:
-        num2_str = ('0' * (8 - len(num2_str))) + num2_str
+    if len(multiplier) < bits:
+        multiplier = (['0'] * (bits - len(multiplier))) + multiplier
+    if len(multiplicanda) < bits:
+        multiplicanda = (['0'] * (bits - len(multiplicanda))) + multiplicanda
 
-    multiplicanda = list(str(multiplicanda))
-    product = '0' * 16
-    for i in range(1, len(num2_str) + 1):
-        if num2_str[-i] == '1':
-            tmp = str(summa(product[:8], multiplicanda))
-            if len(tmp) < 8:
-                tmp = ('0' * (8 - len(tmp))) + tmp
-            product = tmp + product[8:]
-            product = '0' + product[:-1]
-        elif num2_str[-i] == '0':
-            product = '0' + product[:-1]
+    product_sign = str(int(multiplier[SIGN] != multiplicanda[SIGN]))
+    partial_product = '0' * 2 * bits
+    # множимое с выровненное со старшими разрядами частичного произведения
+    aligned_multiplicanda = multiplicanda + (2*bits - len(multiplicanda)) * ['0']
 
-    return int(product)
+    for i in range(1, bits + 1):
+        if multiplier[-i] == '1':
+            tmp = ''.join(summa(partial_product, aligned_multiplicanda, 2*bits))
+            if len(tmp) < bits:
+                tmp = ('0' * (bits - len(tmp))) + tmp
+
+            # partial_product = tmp + partial_product[bits:]
+            partial_product = tmp
+
+        # сдвиг на разряд вправо
+        partial_product = '0' + partial_product[:-1]
+
+    if len(partial_product) < bits:
+        partial_product = ('0' * (bits - len(partial_product))) + partial_product
+
+    partial_product = list(partial_product)[bits:]
+    partial_product[SIGN] = product_sign
+
+    return list(partial_product)
 
 
-def division(divident: List[str], divisor: List[str], bits=8) -> List[str]:
+def division(divident: List[str], divisor: List[str], bits=4) -> List[str]:
     """ Деление 8-разрядных двоичных неотрицательных чисел
 
     divident: делимое
@@ -212,20 +213,6 @@ def division(divident: List[str], divisor: List[str], bits=8) -> List[str]:
 
     assert len(divident) == len(divisor_additional_code)
 
-    divisor_max_bit = bits - 1  # количество значащих битов
-    for i in divisor[1:]:
-        if i == '0':
-            divisor_max_bit -= 1
-            continue
-        break
-
-    divident_max_bit = bits - 1
-    for i in divident[1:]:
-        if i == '0':
-            divident_max_bit -= 1
-            continue
-        break
-
     partial_remainder_sign = '0'
     partial_remainder = divident[:]
 
@@ -242,32 +229,23 @@ def division(divident: List[str], divisor: List[str], bits=8) -> List[str]:
 
     quotient = []
     for i in range(bits):
-        # if compare(partial_remainder, divisor) == -1:
-        #     print(f'compare({partial_remainder}, {divisor})',
-        #           compare(partial_remainder, divisor))
-        #     break
-
         # сдвиг делимого влево на разряд
         partial_remainder = partial_remainder[1:] + ['0']
-        # partial_remainder[0] = partial_remainder_sign
 
         # Если полученный остаток положительный, то после его сдвига на
         # один разряд влево к нему прибавляется делитель в ДК,
         # а если остаток отрицательный, то после сдвига влево к нему
         # прибавляется делитель в прямом коде
         if partial_remainder_sign == '1':
-            partial_remainder = summa(
-                partial_remainder[:], divisor[:], double_bits)
+            partial_remainder = summa(partial_remainder[:],
+                                      divisor[:], double_bits)
             if len(partial_remainder) > double_bits:
                 partial_remainder = partial_remainder[1:]
         elif partial_remainder_sign == '0':
-            partial_remainder = summa(
-                partial_remainder[:], divisor_additional_code[:], double_bits)
+            partial_remainder = summa(partial_remainder[:],
+                                      divisor_additional_code[:], double_bits)
 
         partial_remainder_sign = partial_remainder[SIGN]
-
-            # partial_remainder = subtract_with_additional_code(
-            #     partial_remainder[:], divisor[:], double_bits, force=True)
 
         # Если полученный остаток положительный, то цифре частного
         # присваивается значение 1, а если остаток отрицательный,
@@ -276,7 +254,6 @@ def division(divident: List[str], divisor: List[str], bits=8) -> List[str]:
             quotient.append('0')
         elif partial_remainder_sign == '0':
             quotient.append('1')
-
 
     if len(quotient) < (bits - 1):
         quotient = ['0'] * ((bits - 1) - len(quotient)) + quotient
