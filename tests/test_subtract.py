@@ -1,4 +1,4 @@
-import pytest
+# import pytest
 
 from mathematic.arithmetic import subtract_as_ints, subtract_using_additional_code
 from tests.utils import asssert_equal
@@ -42,11 +42,11 @@ def test_subtract():
     assert subtract_as_ints(1110, 101) == 1001
 
 
-def test_minus_a_lt_b():
-    """
-    Проверка случаея, когда уменьшаемое больше вычитаемого
-    """
-    pytest.raises(AssertionError, subtract_as_ints, 1, 1000)
+# def test_minus_a_lt_b():
+#     """
+#     Проверка случаея, когда уменьшаемое больше вычитаемого
+#     """
+#     pytest.raises(AssertionError, subtract_as_ints, 1, 1000)
 
 
 def test_subtraend():
